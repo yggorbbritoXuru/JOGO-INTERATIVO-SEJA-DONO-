@@ -184,47 +184,38 @@ function validarCadastro() {
 }
 
 
-function calcularResultado() {
-    let acertos = 0;
-    let feedback = "";
+async function calcularResultado() {
+  let acertos = 0;
+  let feedback = "";
 
-    perguntas.forEach((pergunta, index) => {
-        const respostaSelecionada = document.querySelector(`input[name="q${index + 1}"]:checked`);
-        if (respostaSelecionada) {
-            if (respostaSelecionada.value === pergunta.respostaCorreta) {
-                acertos++;
-                feedback += `<p>Pergunta ${index + 1}: Correto!</p>`;
-            } else {
-                feedback += `<p>Pergunta ${index + 1}: Incorreto. A resposta correta é ${pergunta.respostaCorreta.toUpperCase()}. </p>`;
-            }
-        } else {
-            feedback += `<p>Pergunta ${index + 1}: Não respondida.</p>`;
-        }
-    });
+  perguntas.forEach((pergunta, index) => {
+    const respostaSelecionada = document.querySelector(`input[name="q${index + 1}"]:checked`);
+    if (respostaSelecionada) {
+      if (respostaSelecionada.value === pergunta.respostaCorreta) {
+        acertos++;
+        feedback += `<p>Pergunta ${index + 1}: Correto!</p>`;
+      } else {
+        feedback += `<p>Pergunta ${index + 1}: Incorreto. A resposta correta é ${pergunta.respostaCorreta.toUpperCase()}.</p>`;
+      }
+    } else {
+      feedback += `<p>Pergunta ${index + 1}: Não respondida.</p>`;
+    }
+  });
 
-    const pontuacao = acertos * 10;
+  const pontuacao = acertos * 10;
 
-    document.getElementById('resultadoNome').textContent = nomeUsuario || 'Usuário';
-    document.getElementById('acertos').textContent = acertos;
-    document.getElementById('pontuacao').textContent = pontuacao;
-    document.getElementById('feedback').innerHTML = feedback;
+  document.getElementById('resultadoNome').textContent = nomeUsuario || 'Usuário';
+  document.getElementById('acertos').textContent = acertos;
+  document.getElementById('pontuacao').textContent = pontuacao;
+  document.getElementById('feedback').innerHTML = feedback;
 
-    // Placeholder ranking (replace with actual ranking logic)
-    let ranking = '';
-    if (pontuacao === 100) ranking = '1º';
-    else if (pontuacao >= 80) ranking = '2º';
-    // ...
+  // Exemplo simples de ranking local (removido, pois ranking real é salvo no JSON)
+  document.getElementById("ranking").textContent = "";
 
+  mostrarTela(7); // Mostra a tela de resultados
 
-    document.getElementById("ranking").textContent = ranking;
-
-    mostrarTela(7);
-      // Prevent resubmission (optional)
-      document.querySelector('#tela6 button').disabled = true;
-
-      salvarRanking(nomeUsuario || 'Usuário', pontuacao); // Salva o ranking após o jogo
-      atualizarRanking(); // Atualiza o ranking na tela 8
-
+  // Salva o ranking no arquivo JSON remoto
+  await saveRanking(nomeUsuario, pontuacao);
 }
 
 
@@ -243,34 +234,60 @@ async function fetchRanking() {
 }
 
 async function saveRanking(nome, pontuacao) {
-
     const novoRanking = {
         nome: nome,
         pontuacao: pontuacao,
         timestamp: new Date().getTime()
     };
-    ranking.push(novoRanking);
 
     try {
-      const response = await fetch(rankingURL, {
-        method: 'POST',  // Use POST to add a new entry. Use PUT to update if you have a specific ID
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(ranking), // Send the updated ranking
-      });
+        // 1. Fetch the existing ranking data:
+        const response = await fetch(rankingURL);
+        if (!response.ok) {
+            throw new Error(`HTTP error fetching ranking! status: ${response.status}`); // Explicit error handling for fetch
+        }
+        const existingRanking = await response.json();
 
-      if (!response.ok) {
-          console.error('Failed to update ranking:', response.status);
-          // Optionally, handle the error, e.g., show a message to the user.
-      } else {
-          console.log('Ranking updated successfully');
-      }
+
+        // 2. Add the new ranking entry:
+        existingRanking.push(novoRanking);
+
+
+        // 3. Sort the updated ranking:
+        existingRanking.sort((a, b) => {
+            const scoreDiff = b.pontuacao - a.pontuacao;
+            if (scoreDiff !== 0) return scoreDiff;
+            const timeDiff = a.timestamp - b.timestamp;
+            if (timeDiff !== 0) return timeDiff;
+            return a.nome.localeCompare(b.nome);
+        });
+
+
+        // 4. Send the updated ranking back to the server:
+        const updateResponse = await fetch(rankingURL, {
+            method: 'PUT', // Or POST, as appropriate for your server
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(existingRanking),
+        });
+
+        if (!updateResponse.ok) {
+            console.error('Failed to update ranking:', updateResponse.status, await updateResponse.text());  // Include error text for debugging.
+            // Handle errors (e.g., show a message to the user).  Consider adding a retry mechanism.
+        } else {
+            console.log('Ranking updated successfully');
+            ranking = existingRanking; // Update the local ranking
+            atualizarRanking();  // Update the displayed ranking
+        }
+
 
     } catch (error) {
-        console.error("Error updating ranking data:", error);
+        console.error("Error updating ranking:", error);
+        // Handle errors (display a message, offer a retry option, etc.)
     }
 }
+
 
 
 async function atualizarRanking() {
