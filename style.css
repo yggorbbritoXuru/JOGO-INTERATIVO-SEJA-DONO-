@@ -105,8 +105,9 @@ button:hover {
     padding: 20px;
     text-align: center; /* Center the text */
     margin-top: 20px; /* Add some spacing above the footer */
-    /* Add any other footer styles you need */
+    display: none; /* Initially hide the footer */
 }
+
 
 .images{
     display: flex;

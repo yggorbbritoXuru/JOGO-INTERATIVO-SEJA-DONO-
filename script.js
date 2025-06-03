@@ -115,29 +115,32 @@ function mostrarTela(numero) {
     const novaTela = document.getElementById('tela' + numero);
     if (novaTela) novaTela.classList.remove('hidden');
 
-    if (numero === 6) {
-        gerarPerguntas();
+    // Show/hide footer based on the current screen:
+    const autores = document.getElementById('autores');
+    if (numero === 1) { // Only show on the welcome screen
+        autores.style.display = 'block'; // Or 'flex', 'grid', etc. depending on your layout
+
+        // Set footer content (same as before)
+        autores.innerHTML = `
+            <h3>Autores</h3>
+            <p>Ygor Brito, Iasmine Cabral e Matheus Souza</p>
+            </div>
+            <p>Discente: Prof. Dr. Ítalo José Bastos Guimarães</p>
+            <p>Desenvolvimento: 2025</p>
+            <div class = "images">
+                <img src="template/ppgAdm.png" alt="Logo PPGADM" width = "100px">
+                <img src="template/IFGoRio.png" alt="Logo IFGoRio" width = "100px">
+            </div>
+            <p>PPGADM - Instituto Federal Goiano - Campus Rio Verde</p>
+        `;
+    } else {
+        autores.style.display = 'none'; // Hide on other screens
     }
 
-      if (numero === 1) {
-    const autores = document.getElementById('autores');
-
-    // Set the content, including images:
-    autores.innerHTML = `
-      <h3>Autores</h3>
-      <p>Vanesa, Marisa e Dorneles</p>
-      <p>Docente: Prof. Dr. Ítalo José Bastos Guimarães</p>
-      <p>Desenvolvimento: 2025</p>
-
-      <div class = "images">
-
-      <img src="template/ppgAdm.png" alt="Logo PPGADM" width = "100px">
-      <img src="template/IFGoRio.png" alt="Logo IFGoRio" width = "100px">
-      </div>
-
-      <p>PPGADM - Instituto Federal Goiano - Campus Rio Verde</p>
-    `;
-  }
+    if (numero === 6) {
+        gerarPerguntas();
+        startTime = new Date(); // Start timer when quiz begins
+    }
 }
 
 
