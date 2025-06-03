@@ -98,3 +98,23 @@ button:hover {
 }
 
 .hidden { display: none; }
+
+
+#autores {
+    background-color: #f0f0f0; /* Example background color */
+    padding: 20px;
+    text-align: center; /* Center the text */
+    margin-top: 20px; /* Add some spacing above the footer */
+    /* Add any other footer styles you need */
+}
+
+.images{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+
+
+}

@@ -1,5 +1,10 @@
 // script.js
 let nomeUsuario = '';
+let startTime;
+let ranking = [];
+
+// Fetch ranking data from JSON file (replace with your actual URL)
+const rankingURL = "https://jogo-seja-dono.vercel.app/ranking.json";
 const perguntas = [
     {
         pergunta: "O que é uma cooperativa de crédito?",
@@ -113,7 +118,28 @@ function mostrarTela(numero) {
     if (numero === 6) {
         gerarPerguntas();
     }
+
+      if (numero === 1) {
+    const autores = document.getElementById('autores');
+
+    // Set the content, including images:
+    autores.innerHTML = `
+      <h3>Autores</h3>
+      <p>Ygor Brito, Iasmine Cabral e Matheus Souza</p>
+      <p>Discente: Prof. Dr. Ítalo José Bastos Guimarães</p>
+      <p>Desenvolvimento: 2025</p>
+
+      <div class = "images">
+
+      <img src="template/ppgAdm.png" alt="Logo PPGADM" width = "100px">
+      <img src="template/IFGoRio.png" alt="Logo IFGoRio" width = "100px">
+      </div>
+
+      <p>PPGADM - Instituto Federal Goiano - Campus Rio Verde</p>
+    `;
+  }
 }
+
 
 
 function gerarPerguntas(){
@@ -150,7 +176,8 @@ function validarCadastro() {
     nomeUsuario = nome;
     erro.textContent = '';
 
-    mostrarTela(6); // <-- This line was missing!  Now it shows tela6 (the quiz)
+    mostrarTela(6);
+    startTime = new Date();
 }
 
 
@@ -198,20 +225,69 @@ function calcularResultado() {
 }
 
 
-function salvarRanking(nome, pontuacao) {
-    let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
-    ranking.push({ nome, pontuacao });
-    // Ordenar o ranking por pontuação (decrescente) e depois por nome (alfabética)
-    ranking.sort((a, b) => b.pontuacao - a.pontuacao || a.nome.localeCompare(b.nome));
-    localStorage.setItem('ranking', JSON.stringify(ranking));
+
+async function fetchRanking() {
+    try {
+        const response = await fetch(rankingURL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        ranking = await response.json();
+    } catch (error) {
+        console.error("Error fetching ranking:", error);
+        ranking = []; // Initialize with an empty array if fetching fails
+    }
+}
+
+async function saveRanking(nome, pontuacao) {
+
+    const novoRanking = {
+        nome: nome,
+        pontuacao: pontuacao,
+        timestamp: new Date().getTime()
+    };
+    ranking.push(novoRanking);
+
+    try {
+      const response = await fetch(rankingURL, {
+        method: 'POST',  // Use POST to add a new entry. Use PUT to update if you have a specific ID
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ranking), // Send the updated ranking
+      });
+
+      if (!response.ok) {
+          console.error('Failed to update ranking:', response.status);
+          // Optionally, handle the error, e.g., show a message to the user.
+      } else {
+          console.log('Ranking updated successfully');
+      }
+
+    } catch (error) {
+        console.error("Error updating ranking data:", error);
+    }
 }
 
 
-function atualizarRanking() {
-    let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
+async function atualizarRanking() {
+
+    await fetchRanking();
+    // Sort the ranking by score (descending), then by timestamp (ascending), then by name
+    ranking.sort((a, b) => {
+        const scoreDiff = b.pontuacao - a.pontuacao;
+        if (scoreDiff !== 0) return scoreDiff;
+
+        const timeDiff = a.timestamp - b.timestamp; // Earlier time is better
+        if (timeDiff !== 0) return timeDiff;
+
+        return a.nome.localeCompare(b.nome);
+    });
+
+
+
     const rankingList = document.getElementById('rankingList');
     rankingList.innerHTML = '';
-
     ranking.forEach((item, index) => {
         const listItem = document.createElement('li');
         listItem.textContent = `${index + 1}. ${item.nome} - ${item.pontuacao} pontos`;
@@ -219,4 +295,10 @@ function atualizarRanking() {
     });
 }
 
-mostrarTela(1);
+
+
+
+
+mostrarTela(1); // Show welcome screen initially
+fetchRanking(); // Load ranking data when the page loads
+
