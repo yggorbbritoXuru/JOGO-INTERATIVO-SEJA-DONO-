@@ -125,8 +125,8 @@ function mostrarTela(numero) {
     // Set the content, including images:
     autores.innerHTML = `
       <h3>Autores</h3>
-      <p>Ygor Brito, Iasmine Cabral e Matheus Souza</p>
-      <p>Discente: Prof. Dr. Ítalo José Bastos Guimarães</p>
+      <p>Vanesa, Marisa e Dorneles</p>
+      <p>Docente: Prof. Dr. Ítalo José Bastos Guimarães</p>
       <p>Desenvolvimento: 2025</p>
 
       <div class = "images">
